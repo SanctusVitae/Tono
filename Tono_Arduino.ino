@@ -21,21 +21,19 @@
 #define pinData     A0
 
 cTimedOccurence     myTimer;
-cStepperMotor       myMotor(pinStep, pinDir, -25000, 13000);
+cStepperMotor       myMotor(pinStep, pinDir, -25000, 8000);
 
-SimpleSwitch        swStart(pinStart, true);
+SimpleSwitch        swStart(pinStart, false);
 SimpleSwitch        swMReset(pinSwitch, true);
 SimpleSensor        seData(pinData, 4.78);  // pin i wartoĹ›Ä‡ w volt do uzyskania wynikĂłw, zwykle podaje siÄ™ 5V
 SimpleDigitalDevice myMotorEn(pinMotEn, true); // to moĹĽna wrzuciÄ‡ do klasy silnika krokowego... przerobiÄ‡ w wolnym czasie
-
-LogMessage Log;
 
 // timery do
 Timer   Tmr;
 int     TimerEvent;
 
 String        dev_SerialNumber = "XY03";
-int           motorFrequency  = 400;
+int           motorFrequency  = 800;
 long int      scanLength      = 10000L; // 10sec
 
 void SendDataFunc();
@@ -51,9 +49,8 @@ class TonometerMessageQueue : public cCommandQueue
               {
                 Serial.print("A_TN!");
                 TimerEvent = Tmr.every(10, SendDataFunc);
-                //myMotorEn.On();
                 myTono.OpenConn();
-                //temp/myTono.AxisRestart();
+                myTono.AxisRestart();
               }
             }
 ///////////////////////////////////////////////
@@ -193,10 +190,10 @@ void loop()
 
 void SendDataFunc()
 {
-  //temp/myTono.RunData();
+  myTono.RunData();
 }
 
 ISR(TIMER1_COMPA_vect)
 {
-  //temp/myMotor.asmRun();
+  myMotor.asmRun();
 }

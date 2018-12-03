@@ -20,8 +20,6 @@ class Tonometer {
     long int        m_scanLength;
     int             m_scanArea;
     double          m_scanTime;
-
-    int temp_for_Me = 0; 
     
     enum F_COND : int
     {
@@ -83,21 +81,24 @@ class Tonometer {
   void      AxisRestart()
   {
     m_cMotorEn.On();
-    if (!m_cswReset.GetState()) // jeĹ›li nie wciĹ›niÄ™ty switch
+    if (!m_cswReset.GetState()) // jeśli nie jest na switchu
     {
       m_cMotor.asmGoToMin();
-      while (!m_cswReset.GetState()) { } // czeka aĹĽ zejdzie ze switcha
+      while (!m_cswReset.GetState()) { } // czeka do najechania na switch
     }
 
     m_cMotor.asmGoToMax();
 
-    while (m_cswReset.GetState()) { }
+    
 
+    while (m_cswReset.GetState()) { }
+    
     m_cMotor.asmStopMovement();
     m_cMotor.asmMoveTo(m_cMotor.asmGetStep()+400);
-    m_cMotor.asmSetZero(); m_cMotor.asmSetMin(-1000);
+    delay(1);
+    while (!m_cMotor.asmCheckDestReached()) { delay(1); }
     
-    //while (m_cMotor.asmGetState() != cStepperMotor::E_ErrorCode::DestReached) { }
+    m_cMotor.asmSetZero(); m_cMotor.asmSetMin(-1000);
     
     m_cMotorEn.Off();
   }
@@ -152,8 +153,7 @@ class Tonometer {
                     // porownaj wartosc sensora z progiem
                     if (m_cSensor.GetIntValue() >= m_startValue)
                       {
-                        temp_for_Me = m_cMotor.asmGetStep();
-                        m_cMotor.asmMoveTo(temp_for_Me+m_scanArea);
+                        m_cMotor.asmMoveTo(m_cMotor.asmGetStep()+m_scanArea);
 
                         // value reached
                         Serial.print("_VT_");          // marker 1
@@ -173,7 +173,7 @@ class Tonometer {
                 }
                 case E_MODE::E_MOVEMENT:
                   {
-                    if ( m_cMotor.asmGetState() == 0 )
+                    if (m_cMotor.asmCheckDestReached())
                     {
                       Serial.print("_PR_");   //  movement  // marker 2
                       m_scanTime = millis();
@@ -193,10 +193,10 @@ class Tonometer {
                   }
                 case E_MODE::E_RETURN:
                   {
-                      if ( m_cMotor.asmGetStep() <= temp_for_Me)
+                      if (m_cMotor.asmCheckDestReached())
                       {
-                      Serial.print("_SR_");   //  stationary // marker 4
-                      m_State = E_MODE::E_FINISH;
+                        Serial.print("_SR_");   //  stationary // marker 4
+                        m_State = E_MODE::E_FINISH;
                       }
                       break;
                   }
